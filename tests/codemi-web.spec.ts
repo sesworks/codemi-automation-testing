@@ -22,34 +22,37 @@ test.describe('Codemi Official Website E2E Tests', () => {
   });
 
   test('TC02: Verify Navigation Links and Broken Links Check', async ({ page }) => {
-    // 1. Tunggu minimal satu elemen link (a[href]) terpasang di DOM (mencegah timing issue di CI)
     const linkLocator = page.locator('a[href]');
     await linkLocator.first().waitFor({ state: 'attached', timeout: 10000 });
 
-    // 2. Ambil seluruh atribut href
     const links = await linkLocator.evaluateAll((elements) =>
       elements
         .map((el) => (el as HTMLAnchorElement).href)
         .filter((href) => href && href.startsWith('http'))
     );
 
-    // 3. Verifikasi tautan terdeteksi
     expect(links.length).toBeGreaterThan(0);
     console.log(`[Navigation Audit] Berhasil mendeteksi ${links.length} tautan aktif.`);
   });
 
-  test('TC03: Form Validation & Input Interaction', async ({ page }) => {
+  test('TC03: Form Validation & Full Field Input Interaction (No Submit)', async ({ page }) => {
     if (await homePage.requestDemoButton.isVisible()) {
       await homePage.clickRequestDemo();
       await page.waitForLoadState('domcontentloaded');
 
-      await contactPage.fillDemoForm({
-        name: 'Anthony QA',
+      // Mengisi form lengkap dengan efek ketikan bertahap
+      await contactPage.fillFullDemoForm({
+        nama: 'Anthony QA',
+        jabatan: 'QA Lead',
+        perusahaan: 'Codemi Assessment Suite',
         email: 'anthony.qa@example.com',
-        phone: '081234567890',
-        company: 'Enterprise Learning QA',
+        whatsapp: '081234567890',
       });
 
+      // Jeda 2 detik agar visual form terisi jelas di layar sebelum selesai
+      await page.waitForTimeout(2000);
+
+      // Verifikasi tombol ada dan siap diklik tanpa mengeksekusi submit nyata
       if (await contactPage.submitButton.isVisible()) {
         await expect(contactPage.submitButton).toBeEnabled();
       }

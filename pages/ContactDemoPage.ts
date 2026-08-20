@@ -1,46 +1,103 @@
 import { Page, Locator } from '@playwright/test';
 
 /**
- * Page Object Model untuk interaksi Form Demo / Kontak Calon Klien di Codemi
+ * Page Object Model untuk formulir pendaftaran Jadwalkan Demo Codemi
  */
 export class ContactDemoPage {
   readonly page: Page;
-  readonly nameInput: Locator;
-  readonly emailInput: Locator;
-  readonly phoneInput: Locator;
-  readonly companyInput: Locator;
+  readonly namaLengkapInput: Locator;
+  readonly jabatanInput: Locator;
+  readonly perusahaanInput: Locator;
+  readonly jumlahKaryawanDropdown: Locator;
+  readonly emailKerjaInput: Locator;
+  readonly noWhatsappInput: Locator;
+  readonly industriDropdown: Locator;
+  readonly produkDropdown: Locator;
   readonly submitButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
 
-    // Menggunakan getByPlaceholder atau fallback ke atribut CSS name
-    this.nameInput = page.getByPlaceholder(/nama/i).or(page.locator('input[name="name"], input[name*="nama"]')).first();
-    this.emailInput = page.getByPlaceholder(/email/i).or(page.locator('input[type="email"]')).first();
-    this.phoneInput = page.getByPlaceholder(/telepon|phone|whatsapp/i).or(page.locator('input[type="tel"]')).first();
-    this.companyInput = page.getByPlaceholder(/perusahaan|company/i).or(page.locator('input[name*="company"]')).first();
-    
-    // Locator tombol aksi submit/kirim
-    this.submitButton = page.getByRole('button', { name: /kirim|submit|request/i }).first();
+    // Input text fields
+    this.namaLengkapInput = page.getByPlaceholder('Nama Anda').or(page.locator('input[name*="name"], input[placeholder*="Nama"]')).first();
+    this.jabatanInput = page.getByPlaceholder('e.g. Training Manager').or(page.locator('input[name*="job"], input[name*="jabatan"], input[name*="title"]')).first();
+    this.perusahaanInput = page.getByPlaceholder('Nama perusahaan').or(page.locator('input[name*="company"], input[name*="perusahaan"]')).first();
+    this.emailKerjaInput = page.getByPlaceholder('nama@perusahaan.com').or(page.locator('input[type="email"]')).first();
+    this.noWhatsappInput = page.getByPlaceholder('08xxxxxxxxxx').or(page.locator('input[type="tel"], input[name*="phone"], input[name*="whatsapp"]')).first();
+
+    // Dropdown fields
+    this.jumlahKaryawanDropdown = page.locator('select').nth(0).or(page.getByRole('combobox').nth(0));
+    this.industriDropdown = page.locator('select').nth(1).or(page.getByRole('combobox').nth(1));
+    this.produkDropdown = page.locator('select').nth(2).or(page.getByRole('combobox').nth(2));
+
+    // Submit button
+    this.submitButton = page.getByRole('button', { name: /Kirim Permintaan Demo/i }).first();
   }
 
   /**
-   * Mengisi field formulir pendaftaran demo secara modular
-   * @param data Objek berisi name, email, phone, dan company
+   * Mengisi seluruh field input formulir satu per satu secara perlahan
    */
-  async fillDemoForm(data: { name: string; email: string; phone: string; company: string }): Promise<void> {
-    // Mengecek apakah elemen muncul sebelum melakukan input (mencegah flaky jika form dinamis)
-    if (await this.nameInput.isVisible()) {
-      await this.nameInput.fill(data.name);
+  async fillFullDemoForm(data: {
+    nama: string;
+    jabatan: string;
+    perusahaan: string;
+    email: string;
+    whatsapp: string;
+  }): Promise<void> {
+    const delay = 80;
+
+    // 1. Nama Lengkap
+    if (await this.namaLengkapInput.isVisible()) {
+      await this.namaLengkapInput.click();
+      await this.namaLengkapInput.pressSequentially(data.nama, { delay });
     }
-    if (await this.emailInput.isVisible()) {
-      await this.emailInput.fill(data.email);
+
+    // 2. Jabatan
+    if (await this.jabatanInput.isVisible()) {
+      await this.jabatanInput.click();
+      await this.jabatanInput.pressSequentially(data.jabatan, { delay });
     }
-    if (await this.phoneInput.isVisible()) {
-      await this.phoneInput.fill(data.phone);
+
+    // 3. Perusahaan
+    if (await this.perusahaanInput.isVisible()) {
+      await this.perusahaanInput.click();
+      await this.perusahaanInput.pressSequentially(data.perusahaan, { delay });
     }
-    if (await this.companyInput.isVisible()) {
-      await this.companyInput.fill(data.company);
+
+    // 4. Dropdown Jumlah Karyawan
+    if (await this.jumlahKaryawanDropdown.isVisible()) {
+      await this.jumlahKaryawanDropdown.click();
+      await this.page.keyboard.press('ArrowDown');
+      await this.page.keyboard.press('Enter');
+      await this.page.waitForTimeout(300);
+    }
+
+    // 5. Email Kerja
+    if (await this.emailKerjaInput.isVisible()) {
+      await this.emailKerjaInput.click();
+      await this.emailKerjaInput.pressSequentially(data.email, { delay });
+    }
+
+    // 6. Nomor WhatsApp
+    if (await this.noWhatsappInput.isVisible()) {
+      await this.noWhatsappInput.click();
+      await this.noWhatsappInput.pressSequentially(data.whatsapp, { delay });
+    }
+
+    // 7. Dropdown Industri
+    if (await this.industriDropdown.isVisible()) {
+      await this.industriDropdown.click();
+      await this.page.keyboard.press('ArrowDown');
+      await this.page.keyboard.press('Enter');
+      await this.page.waitForTimeout(300);
+    }
+
+    // 8. Dropdown Produk yang Diminati
+    if (await this.produkDropdown.isVisible()) {
+      await this.produkDropdown.click();
+      await this.page.keyboard.press('ArrowDown');
+      await this.page.keyboard.press('Enter');
+      await this.page.waitForTimeout(300);
     }
   }
 }
